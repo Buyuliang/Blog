@@ -49,6 +49,8 @@ jobs:
 
       - name: make static file
         run: |
+          git config --global user.email 1259233520@qq.com
+          git config --global user.name tom
           hexo clean
           hexo g
           hexo d
