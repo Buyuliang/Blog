@@ -55,7 +55,7 @@ jobs:
           gulp
 
       - name: push Github
-        uses: Buyuliang/github-pages-deploy-action@v4
+        uses: actions/github-pages-deploy-action@v4
         with:
           token: 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
           repository-name: git@github.com:Buyuliang/Buyuliang.github.io.git
