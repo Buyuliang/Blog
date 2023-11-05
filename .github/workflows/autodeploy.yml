@@ -57,7 +57,8 @@ jobs:
       - name: push Github
         uses: actions/github-pages-deploy-action@v4
         with:
-          token: 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
+          #token: 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
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           repository-name: git@github.com:Buyuliang/Buyuliang.github.io.git
           branch: master
           folder: public
