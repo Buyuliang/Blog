@@ -59,7 +59,7 @@ jobs:
       - name: push Github
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          token: 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
+          token: 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
           repository-name: Buyuliang/Buyuliang.github.io
           branch: master
           folder: public
