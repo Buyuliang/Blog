@@ -53,7 +53,7 @@ jobs:
           git config --global user.name tom
           hexo clean
           hexo g
-          hexo d
+          # hexo d
 
 
       - name: push Github
