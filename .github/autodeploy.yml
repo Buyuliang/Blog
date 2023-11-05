@@ -1,0 +1,64 @@
+name: autodeploy
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types:
+      - published
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          ref: main
+
+      - name: install Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: "16.x"
+
+      - name: install Hexo
+        run: |
+          export TZ='Asia/Shanghai'
+          npm install hexo-cli -g
+
+      - name: cache Hexo
+        id: cache-npm
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - name: install depend
+        if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+        run: |
+          npm install gulp-cli -g
+          npm install --save
+
+      - name: make static file
+        run: |
+          hexo clean
+          hexo bangumi -u
+          hexo generate
+          hexo algolia
+          gulp
+
+      - name: push Github
+        uses: Buyuliang/github-pages-deploy-action@v4
+        with:
+          token: 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
+          repository-name: git@github.com:Buyuliang/Buyuliang.github.io.git
+          branch: master
+          folder: public
+          commit-message: "${{ github.event.head_commit.message }} Updated By Github Actions"
