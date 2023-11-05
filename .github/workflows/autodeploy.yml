@@ -59,7 +59,7 @@ jobs:
         with:
           token: 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
           #github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository-name: https://github.com/Buyuliang/Buyuliang.github.io
+          repository-name: Buyuliang/Blog
           branch: master
           folder: public
           commit-message: "${{ github.event.head_commit.message }} Updated By Github Actions"
