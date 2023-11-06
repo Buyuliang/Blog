@@ -21,7 +21,7 @@ ${str1}${str2}
 ${string:start}
 # 从string字符串的左边第start个字符开始，向右截取length个字符
 ${string:start:length}
-# 从string字符串的右边第start个字符开始，向右截取到最后，start从1开始
+# 从string字符串的右边第start个字符开始，向右截取到最后，start从1开始(0 可省略)
 ${string:0-start}
 # 从string字符串的右边第start个字符开始，向右截取length个字符
 ${string:0-start:length}
