@@ -1,8 +1,8 @@
 ---
-title: linux-uboot
+title: uboot-lds
 date: 2023-12-07 20:35:35
 tags: [uboot]
-categories: linux-uboot
+categories: uboot
 ---
 
 这是一个 U-Boot bootloader 的链接脚本（Linker Script），用于指定 U-Boot 在内存中的布局和各个部分的放置规则。以下是对该脚本的简要解释：
