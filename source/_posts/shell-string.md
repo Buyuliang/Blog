@@ -2,7 +2,7 @@
 title: shell-string
 date: 2023-10-02 13:38:15
 tags: [shell]
-categories: shell string
+categories: shell
 ---
 
 ### 获取字符串长度
