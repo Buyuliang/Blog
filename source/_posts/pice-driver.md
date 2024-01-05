@@ -1288,6 +1288,31 @@ skb_record_rx_queue(my_skb, rx_queue);
 
 使用 `skb_record_rx_queue` 函数时，需要确保在适当的时机调用它，以便正确记录接收队列信息。
 
+### skb_get_queue_mapping
+`skb_get_queue_mapping` 是一个函数，用于获取给定网络数据包（socket buffer）的队列映射（queue mapping）。在 Linux 内核中，网络数据包可以被分配到不同的队列上进行处理，以实现负载均衡或者多队列处理。
+
+该函数的原型如下：
+
+```c
+unsigned int skb_get_queue_mapping(const struct sk_buff *skb);
+```
+
+参数 `skb` 是一个指向 `struct sk_buff` 结构的指针，该结构表示网络数据包。函数返回一个无符号整数，表示数据包所分配的队列映射。
+
+当网络数据包被送入网络设备进行发送或接收时，内核会根据一定的规则将其分配到一个特定的队列上。这个规则可以基于数据包的源 IP 地址、目标 IP 地址、协议类型、端口等信息进行判断。`skb_get_queue_mapping` 函数可以用来查询数据包所分配的队列映射。
+
+使用 `skb_get_queue_mapping` 函数的一个示例：
+
+```c
+#include <linux/skbuff.h>
+
+struct sk_buff *skb;  // 假设有一个网络数据包
+
+unsigned int queue_mapping = skb_get_queue_mapping(skb);
+```
+
+在这个示例中，我们使用 `skb_get_queue_mapping` 函数获取了网络数据包 `skb` 的队列映射，并将结果存储在 `queue_mapping` 变量中。
+
 ### napi_gro_receive
 `napi_gro_receive` 是一个函数，用于在 Linux 内核中执行网络报文接收和处理的操作。
 
@@ -1388,6 +1413,32 @@ if (tx_queue == NULL) {
 
 `netdev_get_tx_queue` 函数返回一个指向 `netdev_queue` 结构体的指针，表示获取的发送队列。如果发送队列不存在或发生错误，返回值将为 `NULL`。
 
+### READ_ONCE
+`READ_ONCE` 是一个宏，用于在多线程或并发环境下读取变量的值，以确保以原子方式读取变量的值。它被广泛用于 Linux 内核代码中，特别是在读取共享变量时。
+
+`READ_ONCE` 宏的定义如下：
+
+```c
+#define READ_ONCE(x) (*((volatile typeof(x) *)&(x)))
+```
+
+它接受一个变量 `x` 作为参数，并将其强制转换为 `volatile` 类型的指针，并使用间接引用操作符 `*` 来读取该指针指向的值。通过将变量声明为 `volatile`，可以确保编译器不会对该变量的读取进行优化，以避免可能的数据不一致问题。
+
+在多线程或并发环境中，如果一个线程在读取共享变量的过程中，另一个线程同时对该变量进行写操作，那么读取操作可能会得到不一致的或过期的值。使用 `READ_ONCE` 宏可以帮助确保读取操作以原子方式进行，从而避免这种情况。
+
+以下是一个示例，展示了如何使用 `READ_ONCE` 宏：
+
+```c
+int shared_variable = 0;  // 假设有一个共享变量
+
+// 在一个线程中读取共享变量的值
+int value = READ_ONCE(shared_variable);
+```
+
+在这个示例中，我们使用 `READ_ONCE` 宏读取了共享变量 `shared_variable` 的值，并将结果存储在 `value` 变量中。
+
+请注意，`READ_ONCE` 宏仅提供了一种读取变量的原子操作的机制，并不能解决所有并发问题。在多线程或并发环境中，仍然需要使用适当的同步机制（如互斥锁、原子操作等）来确保线程安全性。
+
 ### WRITE_ONCE
 `WRITE_ONCE` 是一个宏，用于以原子方式写入一个变量的值，确保该操作是不可中断的。
 
@@ -1471,6 +1522,17 @@ my_eth_header.h_proto = htons(0x0800);
 ```
 
 在上面的示例中，我们使用 `ethhdr` 结构体定义了一个名为 `my_eth_header` 的以太网帧头部。通过设置结构体的成员，我们可以初始化目的 MAC 地址、源 MAC 地址和协议类型。
+
+### is_valid_ether_addr
+`is_valid_ether_addr` 是一个函数或方法的名称，用于验证以太网（Ethernet）地址的有效性。
+
+以太网地址是一个 48 位的物理地址，通常以十六进制表示，由 6 个字节组成，每个字节之间用冒号或连字符分隔。例如，`00:1A:2B:3C:4D:5E` 或 `00-1A-2B-3C-4D-5E`。
+
+`is_valid_ether_addr` 函数可以用于检查给定的字符串是否符合以太网地址的格式和规范。它通常会执行以下检查：
+
+1. 确保字符串长度为 17 个字符（包括分隔符）。
+2. 确保分隔符的位置正确（每隔两个字符有一个分隔符）。
+3. 确保每个字节的值在合法范围内（0x00 到 0xFF）。
 
 ### is_multicast_ether_addr
 `is_multicast_ether_addr` 是一个函数，用于检查给定的以太网 MAC 地址是否为多播地址。
@@ -1599,3 +1661,54 @@ dev_kfree_skb_any(skb);
 在上面的示例中，我们假设 `skb` 是一个已经定义和初始化的 `sk_buff` 结构体指针。通过调用 `dev_kfree_skb_any` 函数，我们释放了指定的网络数据包缓冲区。
 
 需要注意的是，`dev_kfree_skb_any` 函数会根据网络数据包缓冲区的类型和属性来选择适当的释放方法。它可以用于释放通过网络设备接收的数据包缓冲区，也可以用于释放通过网络设备发送的数据包缓冲区。
+
+### netdev_xmit_more
+`netdev_xmit_more` 是一个函数或标志，用于指示网络设备驱动程序在发送网络数据包后是否有更多数据要发送。这通常与网络设备驱动程序的发送函数相关联。
+
+当网络设备驱动程序发送网络数据包时，它可以设置 `netdev_xmit_more` 标志来指示是否有更多的数据包要发送。如果设置了该标志，网络设备驱动程序可以继续发送后续的网络数据包，而无需等待额外的触发。
+
+这个标志的具体用法和含义可能会因网络设备驱动程序的实现而有所不同。在某些情况下，网络设备驱动程序可能使用该标志来实现多队列发送，允许并行地发送多个数据包。在其他情况下，该标志可能用于指示设备驱动程序在发送数据包后是否需要进行额外的处理或操作。
+
+以下是一个示例，展示了如何在网络设备驱动程序中使用 `netdev_xmit_more`：
+
+```c
+#include <linux/netdevice.h>
+
+struct sk_buff *skb;  // 假设有一个网络数据包
+
+// 设置 netdev_xmit_more 标志，表示还有更多数据包要发送
+skb->dev->xmit_more = 1;
+
+// 发送数据包
+int result = skb->dev->netdev_ops->ndo_start_xmit(skb, skb->dev);
+```
+
+在这个示例中，我们将 `netdev_xmit_more` 设置为 1，表示还有更多的数据包要发送。然后，我们调用网络设备驱动程序的 `ndo_start_xmit` 函数来发送数据包。网络设备驱动程序可以根据 `netdev_xmit_more` 标志来决定是否继续发送后续的数据包。
+
+### netif_xmit_stopped
+`netif_xmit_stopped` 是一个函数或标志，用于指示网络设备是否停止发送数据包。它通常与网络设备驱动程序的发送函数相关联。
+
+当网络设备停止发送数据包时，可以设置 `netif_xmit_stopped` 标志来指示网络设备驱动程序停止发送数据包。这可能是由于网络设备的发送队列已满，或者其他原因导致无法继续发送数据包。
+
+这个标志的具体用法和含义可能会因网络设备驱动程序的实现而有所不同。在某些情况下，网络设备驱动程序可能使用该标志来实现流量控制，以防止过多的数据包发送到网络。在其他情况下，该标志可能用于指示设备驱动程序在发送数据包后需要进行额外的处理或操作。
+
+以下是一个示例，展示了如何在网络设备驱动程序中使用 `netif_xmit_stopped`：
+
+```c
+#include <linux/netdevice.h>
+
+struct sk_buff *skb;  // 假设有一个网络数据包
+
+// 发送数据包
+int result = skb->dev->netdev_ops->ndo_start_xmit(skb, skb->dev);
+
+// 如果发送队列已满，设置 netif_xmit_stopped 标志
+if (result == NETDEV_TX_BUSY) {
+    skb->dev->xmit_lock_owner |= __LINK_STATE_XMIT_XLOCK;
+    skb->dev->xmit_more = 1;
+    netif_tx_stop_queue(skb->dev);
+}
+```
+
+在这个示例中，我们调用网络设备驱动程序的 `ndo_start_xmit` 函数来发送数据包。如果发送队列已满，返回值 `NETDEV_TX_BUSY` 将会被返回。在这种情况下，我们设置了 `netif_xmit_stopped` 标志，表示网络设备已停止发送数据包，并调用 `netif_tx_stop_queue` 函数来停止发送队列。
+
