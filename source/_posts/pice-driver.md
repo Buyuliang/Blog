@@ -355,6 +355,26 @@ unsigned long msecs_to_jiffies(const unsigned int m);
 
 如果你需要更多关于 `msecs_to_jiffies` 函数的信息，或者在特定的上下文中使用它，请提供更多细节，我将尽力提供帮助。
 
+### dma_map_single
+`dma_map_single()` 是 Linux 内核中的一个函数，用于将单个内存区域映射到可进行直接内存访问（Direct Memory Access，DMA）的设备。
+
+函数原型如下：
+
+```c
+dma_addr_t dma_map_single(struct device *dev, void *addr, size_t size, enum dma_data_direction dir);
+```
+
+函数参数的含义如下：
+
+- `dev`：指向设备结构体的指针，表示要进行 DMA 操作的设备。
+- `addr`：指向要映射的内存区域的起始地址。
+- `size`：要映射的内存区域的大小，以字节为单位。
+- `dir`：指定数据传输的方向，可以是 `DMA_TO_DEVICE`（从内存到设备）或 `DMA_FROM_DEVICE`（从设备到内存）。
+
+`dma_map_single()` 函数将指定的内存区域进行物理地址映射，以便设备可以直接访问该内存区域，而不需要通过 CPU。函数返回一个 `dma_addr_t` 类型的值，表示映射后的物理地址。
+
+需要注意的是，`dma_map_single()` 函数通常在设备驱动程序中使用，用于在进行 DMA 操作之前将内存区域映射到设备。对于不同的设备和架构，可能还需要进行其他的 DMA 相关设置，如设置 DMA 缓冲区、DMA 写入或读取操作等。
+
 ### dma_unmap_single
 `dma_unmap_single` 是 Linux 内核中的一个函数，用于解除通过 DMA（Direct Memory Access，直接内存访问）映射的单个数据缓冲区。
 
@@ -1712,3 +1732,339 @@ if (result == NETDEV_TX_BUSY) {
 
 在这个示例中，我们调用网络设备驱动程序的 `ndo_start_xmit` 函数来发送数据包。如果发送队列已满，返回值 `NETDEV_TX_BUSY` 将会被返回。在这种情况下，我们设置了 `netif_xmit_stopped` 标志，表示网络设备已停止发送数据包，并调用 `netif_tx_stop_queue` 函数来停止发送队列。
 
+### pci_set_drvdata
+`pci_set_drvdata` 是一个函数，用于设置 PCI 设备的私有数据指针。在 Linux 内核中，PCI 设备结构体（`struct pci_dev`）中有一个指针成员 `dev_data`，可以用来存储与该设备相关的私有数据。
+
+`pci_set_drvdata` 函数的原型如下：
+
+```c
+void pci_set_drvdata(struct pci_dev *pdev, void *data);
+```
+
+它接受两个参数：`pdev` 是指向要设置私有数据的 PCI 设备结构体的指针，`data` 是要设置的私有数据指针。
+
+使用 `pci_set_drvdata` 函数可以将私有数据指针存储在 `pdev->dev_data` 中，以便在之后的代码中使用。
+
+以下是一个示例，展示了如何使用 `pci_set_drvdata` 函数：
+
+```c
+#include <linux/pci.h>
+
+struct my_data {
+    int value;
+    // 其他的数据成员
+};
+
+// 在驱动程序的初始化函数中使用 pci_set_drvdata
+static int my_driver_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+{
+    struct my_data *data;
+
+    // 分配并初始化私有数据
+    data = kmalloc(sizeof(struct my_data), GFP_KERNEL);
+    if (!data) {
+        return -ENOMEM;
+    }
+    data->value = 42;
+
+    // 设置私有数据指针
+    pci_set_drvdata(pdev, data);
+
+    // 其他初始化操作
+    // ...
+
+    return 0;
+}
+```
+
+在这个示例中，我们定义了一个名为 `my_data` 的结构体，其中包含了与 PCI 设备相关的私有数据。在驱动程序的初始化函数 `my_driver_probe` 中，我们使用 `pci_set_drvdata` 函数将 `data` 私有数据指针存储在 `pdev->dev_data` 中。
+
+### pci_set_master
+`pci_set_master` 是一个函数，用于设置 PCI 设备的主控制器寄存器（Master Enable）。在 PCI 总线中，Master Enable 寄存器用于控制设备是否具有总线主控制权。
+
+`pci_set_master` 函数的原型如下：
+
+```c
+void pci_set_master(struct pci_dev *pdev);
+```
+
+它接受一个参数 `pdev`，是指向要设置主控制器寄存器的 PCI 设备结构体的指针。
+
+通过调用 `pci_set_master` 函数，可以将 PCI 设备的主控制器寄存器设置为使能状态，从而允许设备进行 DMA（Direct Memory Access）传输和总线主控制操作。
+
+以下是一个示例，展示了如何使用 `pci_set_master` 函数：
+
+```c
+#include <linux/pci.h>
+
+// 在驱动程序的初始化函数中使用 pci_set_master
+static int my_driver_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+{
+    // 设置设备的主控制器寄存器
+    pci_set_master(pdev);
+
+    // 其他初始化操作
+    // ...
+
+    return 0;
+}
+```
+
+在这个示例中，我们在驱动程序的初始化函数 `my_driver_probe` 中调用了 `pci_set_master` 函数，以设置设备的主控制器寄存器。
+
+需要注意的是，只有具有总线主控制权的设备才能发起 DMA 传输和执行总线主控制操作。因此，在需要进行这些操作的设备上，通常需要调用 `pci_set_master` 函数来启用主控制器。
+
+### pci_request_regions
+`pci_request_regions` 是一个函数，用于请求和分配 PCI 设备的资源区域。在 Linux 内核中，PCI 设备的资源区域包括 I/O 端口、内存地址和中断等。
+
+`pci_request_regions` 函数的原型如下：
+
+```c
+int pci_request_regions(struct pci_dev *pdev, const char *res_name);
+```
+
+它接受两个参数：`pdev` 是指向要请求资源区域的 PCI 设备结构体的指针，`res_name` 是一个字符串，用于标识请求的资源区域。
+
+通过调用 `pci_request_regions` 函数，可以请求和分配给定设备的资源区域。如果请求成功，函数会返回 0；如果请求失败，函数会返回一个负数错误码。
+
+以下是一个示例，展示了如何使用 `pci_request_regions` 函数：
+
+```c
+#include <linux/pci.h>
+
+// 在驱动程序的初始化函数中使用 pci_request_regions
+static int my_driver_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+{
+    int ret;
+
+    // 请求设备的资源区域
+    ret = pci_request_regions(pdev, "my_resource");
+    if (ret) {
+        // 资源请求失败
+        return ret;
+    }
+
+    // 其他初始化操作
+    // ...
+
+    return 0;
+}
+```
+
+在这个示例中，我们在驱动程序的初始化函数 `my_driver_probe` 中调用了 `pci_request_regions` 函数，以请求设备的资源区域，并指定了一个资源名称 "my_resource"。
+
+当成功请求资源区域后，设备的资源就可以被驱动程序访问和使用。在驱动程序的退出时，应使用 `pci_release_regions` 函数释放已分配的资源区域。
+
+### pci_resource_start
+`pci_resource_start` 是一个函数或宏，用于获取 PCI 设备资源区域的起始地址。在 Linux 内核中，PCI 设备的资源区域包括 I/O 端口、内存地址和中断等。
+
+`pci_resource_start` 的使用方式有两种：
+
+1. 作为函数调用：
+```c
+resource_size_t pci_resource_start(struct pci_dev *pdev, int bar);
+```
+它接受两个参数：`pdev` 是指向 PCI 设备结构体的指针，`bar` 是指定的资源区域索引。
+
+2. 作为宏：
+```c
+#define pci_resource_start(pdev, bar) (pdev)->resource[(bar)].start
+```
+它直接返回指定资源区域的起始地址。
+
+`pci_resource_start` 可以用于获取指定 PCI 设备资源区域的起始地址，以便驱动程序可以访问和使用该资源。
+
+以下是一个示例，展示了如何使用 `pci_resource_start` 函数或宏：
+
+```c
+#include <linux/pci.h>
+
+// 在驱动程序中使用 pci_resource_start 获取指定资源区域的起始地址
+static int my_driver_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+{
+    resource_size_t start_addr;
+
+    // 获取设备的第一个资源区域的起始地址
+    start_addr = pci_resource_start(pdev, 0);
+
+    // 使用起始地址进行其他操作
+    // ...
+
+    return 0;
+}
+```
+
+在这个示例中，我们在驱动程序的初始化函数 `my_driver_probe` 中调用了 `pci_resource_start` 函数或宏，以获取设备的第一个资源区域的起始地址。
+
+### pci_iomap
+`pci_iomap` 是一个函数，用于将 PCI 设备的 I/O 端口或内存区域映射到内核地址空间中的一个虚拟地址。在 Linux 内核中，映射这些设备区域可以方便地对其进行读写操作。
+
+`pci_iomap` 函数的原型如下：
+
+```c
+void __iomem *pci_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
+```
+
+它接受三个参数：`pdev` 是指向要映射的 PCI 设备结构体的指针，`bar` 是指定的资源区域索引，`maxlen` 是要映射的最大长度。
+
+通过调用 `pci_iomap` 函数，可以将指定设备的 I/O 端口或内存区域映射到内核地址空间中的一个虚拟地址。函数返回的虚拟地址可以用于访问设备的寄存器或内存。
+
+以下是一个示例，展示了如何使用 `pci_iomap` 函数：
+
+```c
+#include <linux/pci.h>
+
+// 在驱动程序的初始化函数中使用 pci_iomap 进行映射
+static int my_driver_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+{
+    void __iomem *io_addr;
+
+    // 将设备的第一个资源区域映射到内核地址空间
+    io_addr = pci_iomap(pdev, 0, 0);
+    if (!io_addr) {
+        // 映射失败
+        return -ENOMEM;
+    }
+
+    // 使用映射后的地址进行读写操作
+    // ...
+
+    return 0;
+}
+```
+
+在这个示例中，我们在驱动程序的初始化函数 `my_driver_probe` 中调用了 `pci_iomap` 函数，以将设备的第一个资源区域映射到内核地址空间，并将映射后得到的虚拟地址存储在 `io_addr` 变量中。
+
+需要注意的是，映射的区域在使用完毕后，应使用 `pci_iounmap` 函数解除映射。
+
+### pci_alloc_irq_vectors
+`pci_alloc_irq_vectors` 是一个函数，用于在 PCI 设备上分配中断向量（IRQ vectors）。在 Linux 内核中，IRQ vectors 用于处理设备的中断请求。
+
+`pci_alloc_irq_vectors` 函数的原型如下：
+
+```c
+int pci_alloc_irq_vectors(struct pci_dev *pdev, unsigned int min_vecs, unsigned int max_vecs, unsigned int flags);
+```
+
+它接受四个参数：`pdev` 是指向要分配 IRQ vectors 的 PCI 设备结构体的指针，`min_vecs` 是要分配的最小 IRQ vectors 数量，`max_vecs` 是要分配的最大 IRQ vectors 数量，`flags` 是分配标志。
+
+通过调用 `pci_alloc_irq_vectors` 函数，可以为指定的 PCI 设备分配一组 IRQ vectors。这些 IRQ vectors 可以用于处理设备的中断请求。函数返回一个非负整数，表示分配的 IRQ vectors 的数量，或者返回一个负数值，表示分配失败。
+
+以下是一个示例，展示了如何使用 `pci_alloc_irq_vectors` 函数：
+
+```c
+#include <linux/pci.h>
+
+// 在驱动程序的初始化函数中使用 pci_alloc_irq_vectors 进行 IRQ vectors 分配
+static int my_driver_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+{
+    int num_vecs;
+
+    // 分配 1 个到 4 个 IRQ vectors
+    num_vecs = pci_alloc_irq_vectors(pdev, 1, 4, PCI_IRQ_MSIX);
+
+    if (num_vecs < 0) {
+        // 分配失败
+        return num_vecs;
+    }
+
+    // 使用分配的 IRQ vectors 进行中断处理
+    // ...
+
+    return 0;
+}
+```
+
+在这个示例中，我们在驱动程序的初始化函数 `my_driver_probe` 中调用了 `pci_alloc_irq_vectors` 函数，以为设备分配 1 到 4 个 IRQ vectors，并将分配的数量存储在 `num_vecs` 变量中。
+
+需要注意的是，IRQ vectors 的分配和使用需要与设备的中断控制器和驱动程序的中断处理相关联。具体的中断处理逻辑和配置可能因具体的设备和驱动程序而有所不同。
+
+### pci_read_config_dword
+`pci_read_config_dword` 是一个函数，用于从 PCI 设备的配置空间中读取一个 32 位的配置寄存器的值。在 Linux 内核中，PCI 设备的配置空间包含了设备的各种配置信息和寄存器。
+
+`pci_read_config_dword` 函数的原型如下：
+
+```c
+int pci_read_config_dword(struct pci_dev *dev, int where, u32 *val);
+```
+
+它接受三个参数：`dev` 是指向要读取配置寄存器的 PCI 设备结构体的指针，`where` 是要读取的配置寄存器的偏移量，`val` 是用于存储读取值的指针。
+
+通过调用 `pci_read_config_dword` 函数，可以从指定的 PCI 设备的配置空间中读取指定配置寄存器的值，并将读取的值存储在 `val` 指针所指向的位置。函数返回一个非负整数表示读取的字节数，或者返回一个负数值表示读取失败。
+
+以下是一个示例，展示了如何使用 `pci_read_config_dword` 函数：
+
+```c
+#include <linux/pci.h>
+
+// 在驱动程序中使用 pci_read_config_dword 读取配置寄存器的值
+static void my_driver_function(struct pci_dev *pdev)
+{
+    u32 value;
+
+    // 读取 PCI 设备的配置空间中的配置寄存器的值
+    pci_read_config_dword(pdev, PCI_VENDOR_ID, &value);
+
+    // 使用读取的值进行操作
+    // ...
+
+    // 打印读取到的值
+    printk(KERN_INFO "Value read from configuration space: 0x%x\n", value);
+}
+```
+
+在这个示例中，我们在驱动程序中的某个函数 `my_driver_function` 中调用了 `pci_read_config_dword` 函数，以读取 PCI 设备的配置空间中的 `PCI_VENDOR_ID` 寄存器的值，并将读取的值存储在 `value` 变量中。
+
+需要注意的是，要读取的配置寄存器的偏移量 `where` 是相对于配置空间起始位置的偏移量，而不是相对于设备的基地址。可以使用预定义的宏，如 `PCI_VENDOR_ID`、`PCI_DEVICE_ID` 等来指定要读取的寄存器。
+
+### disable_irq_nosync
+`disable_irq_nosync()` 是 Linux 内核中的一个函数，用于禁用指定的中断，并确保在禁用中断之前已经完成了相关的同步操作。
+
+函数原型如下：
+
+```c
+void disable_irq_nosync(unsigned int irq);
+```
+
+函数参数 `irq` 是一个表示中断号的无符号整数，用于指定要禁用的中断。
+
+`disable_irq_nosync()` 函数用于禁用指定的中断，并确保在禁用中断之前已经完成了同步操作。此函数不会等待挂起的中断处理程序完成，而是立即禁用中断。因此，如果有挂起的中断处理程序正在执行，它可能会被中断。
+
+需要注意的是，禁用中断可能会影响系统的响应性，因此在使用 `disable_irq_nosync()` 函数时需要谨慎。通常情况下，应该在必要的时候才禁用中断，并在尽可能短的时间内重新启用中断，以减小对系统性能的影响。
+
+### ffs
+"ffs"函数是一个常见的C语言库函数，用于查找一个整数中从低位开始的第一个置位（即值为1）的位的位置。
+
+函数原型如下：
+
+```c
+int ffs(int value);
+```
+
+函数参数`value`是一个整数，函数返回值是从低位开始的第一个置位的位位置（从1开始计数），如果没有置位的位，则返回0。
+
+以下是一个示例：
+
+```c
+#include <stdio.h>
+#include <strings.h>
+
+int main() {
+   int num = 10;  // 二进制表示为 1010
+   int position = ffs(num);
+   
+   printf("Position of first set bit: %d\n", position);
+   
+   return 0;
+}
+```
+
+输出结果为：
+
+```
+Position of first set bit: 2
+```
+
+在上述示例中，`ffs(10)`的结果为2，表示整数10的二进制表示中，从低位开始的第一个置位的位位置为2。
+
+"ffs"函数通常用于位操作和位掩码处理中，可以用来判断整数中是否存在置位的位，或者获取最低有效位的位置。
