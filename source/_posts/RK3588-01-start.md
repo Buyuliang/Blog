@@ -5,6 +5,7 @@ tags: [rk3588]
 categories: rk3588
 ---
 
-![Alt text](/images/RK3588-01-start/bootrom.png)
+```bootRomTable```
 
-test
+![bootRomTable](/images/RK3588-01-start/bootRomTable.png)
+
