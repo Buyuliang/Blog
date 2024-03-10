@@ -5,4 +5,6 @@ tags: [rk3588]
 categories: rk3588
 ---
 
-![Alt text](https://github.com/Buyuliang/Blog/blob/main/source/pic/RK3588-01-start/bootrom.png)
+![Alt text](/images/RK3588-01-start/bootrom.png)
+
+test
