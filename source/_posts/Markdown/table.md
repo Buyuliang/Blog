@@ -25,7 +25,7 @@ categories: Markdown
 单元格|单元格
 单元格|单元格
 ```
-![alt text](images\Mardown\table\table00.png)
+![alt text](/images\Mardown\table\table00.png)
 
 ``` bash
 |  表头   | 表头  |
@@ -34,7 +34,7 @@ categories: Markdown
 | 单元格  | 单元格 |
 | 单元格  | 单元格 |
 ```
-![alt text](images\Mardown\table\table00.png)
+![alt text](/images\Mardown\table\table00.png)
 
 ### 对齐方式
 
@@ -51,4 +51,4 @@ categories: Markdown
 | 单元格 | 单元格 | 单元格 |
 | 单元格 | 单元格 | 单元格 |
 ```
-![alt text](images\Mardown\table\table01.png)
+![alt text](/images\Mardown\table\table01.png)
