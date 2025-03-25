@@ -71,3 +71,26 @@ sitemap.json
     }]
 }
 ```
+
+### 标签
+```bash
+<view>
+    <view class="c0">测试：Tom</view>
+</view>
+
+<image src="路径" style="width: 200rpx;height: 1500rpx;"></image> 
+note: 为什么不使用 px 像素；rpx 自动根据分辨率缩放
+
+<icon type="success" size="90rpx"></icon>
+
+<navigator url="/pages/info">跳转</navigator>
+note: 跳转链接
+
+<view bindtap="clickGo">跳转</view>
+clickGo(e){
+  微信跳转api
+  wx.navigateTo({
+    url:'/pages/info',
+  })
+}
+```
